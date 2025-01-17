@@ -21,12 +21,11 @@
     "typescript": "~5.4.5"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.147.0",
     "cdk-docker-image-deployment": "^0.0.577",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   },
   "optionalDependencies": {
-    "@local/pe-lib-no": "^2024.11.3"
+    "aws-cdk-lib": "^2.147.0"
   }
 }
