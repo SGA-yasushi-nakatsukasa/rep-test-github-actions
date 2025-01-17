@@ -53,5 +53,3 @@ jobs:
           body: 'Automated changes by GitHub Actions'
           branch: automated-npm-update
           delete-branch: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
