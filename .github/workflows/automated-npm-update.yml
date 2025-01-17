@@ -33,6 +33,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: test version1
+        run: npm version
+
+      - name: test version2
+        run: npm --version
+
       - name: Update packages
         run: npm update
 
