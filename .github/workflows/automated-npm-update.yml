@@ -59,7 +59,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: develop
+          base: main
           add-paths: package-lock.json
           commit-message: Update npm dependencies
           title: ${{ env.pr_title }}
