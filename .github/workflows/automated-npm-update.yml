@@ -49,9 +49,52 @@ jobs:
       - name: Update packages
         run: npm update
 
+      # 1) 最新の(公開)リリースバージョンを取得
+      - name: Get the latest published release version
+        id: get-latest-release
+        run: |
+          LATEST_RELEASE_VERSION=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName' || true)
+          echo "latestReleaseVersion=$LATEST_RELEASE_VERSION" >> $GITHUB_OUTPUT
+
+      # 2) 最新のドラフトリリースバージョンを取得
+      - name: Get the latest draft release version
+        id: get-draft-release
+        run: |
+          # 直近10件分を取得し、isDraft==trueの先頭を取り出す
+          LATEST_DRAFT_VERSION=$(gh release list --limit 10 --json tagName,isDraft --jq '.[] | select(.isDraft==true) | .tagName' | head -n 1 || true)
+          echo "latestDraftVersion=$LATEST_DRAFT_VERSION" >> $GITHUB_OUTPUT
+
+      # package.json の optionalDependencies と version を置き換え
+      - name: Update package.json with new release versions
+        run: |
+          # 取得したバージョンを環境変数に取り出す
+          LATEST_RELEASE=${{ steps.get-latest-release.outputs.latestReleaseVersion }}
+          LATEST_DRAFT=${{ steps.get-draft-release.outputs.latestDraftVersion }}
+
+          echo "latestRelease: $LATEST_RELEASE"
+          echo "latestDraft: $LATEST_DRAFT"
+
+          # 万一バージョンが取れなかった場合は処理をスキップ (必要に応じて扱いを変えて下さい)
+          if [ -z "$LATEST_RELEASE" ] || [ -z "$LATEST_DRAFT" ]; then
+            echo "ERROR: Could not retrieve one or both release versions. Skipping update."
+            exit 0
+          fi
+
+          # jq で package.json を書き換え
+          # 1) optionalDependencies["@shm-nsd/shm-lib-mv"] を ^(LATEST_RELEASE) に置き換え
+          # 2) version を LATEST_DRAFT に置き換え
+          jq --arg mvversion "^$LATEST_RELEASE" --arg draftVersion "$LATEST_DRAFT" \
+            '.optionalDependencies["@shm-nsd/shm-lib-mv"] = $mvversion | .version = $draftVersion' \
+            package.json > package.json.tmp
+
+          mv package.json.tmp package.json
+          echo "Updated package.json:"
+          cat package.json
+
       - name: Check for changes
         id: git-check
         run: |
+          # 変更があるかどうかを確認し、あれば changes=true を出力
           git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
