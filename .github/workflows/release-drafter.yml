@@ -12,38 +12,46 @@ jobs:
       - name: Generate CalVer version
         id: calver
         run: |
-          TODAY=$(date "+%Y-%m-%d")
+          # 現在の年月を取得
+          YEAR=$(date "+%Y")
+          MONTH=$(date "+%m")
 
-          RELEASE_TAG=$(gh release --repo ${{github.repository}} view --json tagName --jq .tagName)
-          if [ "${RELEASE_TAG}" = "" ]; then
-            RELEASE_TAG="${TODAY}_0"
-            echo "There is no release, use ${RELEASE_TAG}"
-          fi
+          # GitHub CLI で最新リリースタグを取得 (エラー時は何もせず継続)  
+          LATEST_RELEASE_TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || true)  
 
-          TAGS=(${RELEASE_TAG//_/ })
-          MAJOR_VERSION=${TAGS[0]}
-          PATCH_VERSION=${TAGS[1]}
+          if [ -z "$LATEST_RELEASE_TAG" ]; then  
+            echo "No existing release found. Setting version to v${YEAR}.${MONTH}.0"  
+            NEW_TAG="v${YEAR}.${MONTH}.0"  
+          else  
+            echo "Latest release tag: $LATEST_RELEASE_TAG"  
+            # 例: v2024.12.3 → 2024.12.3 を取り出して分割  
+            RAW="${LATEST_RELEASE_TAG#v}"  # 先頭の v を除去  
+            IFS='.' read -r REL_YEAR REL_MONTH REL_PATCH <<< "$RAW"  
 
-          PREFIX="${VERSION_PREFIX}${TODAY}"
-          if [ "${MAJOR_VERSION}" = "${PREFIX}" ]; then
-            PATCH_VERSION=$(expr ${PATCH_VERSION} + 1)
-            echo "There is already a release for the same date, increment patch_version: ${PATCH_VERSION}"
-          else
-            PATCH_VERSION=1
-          fi
+            # パッチ番号が存在しない場合は 0 扱い  
+            REL_PATCH="${REL_PATCH:-0}"  
 
-          VERSION="${PREFIX}_${PATCH_VERSION}"
+            # リリース年月と現在の年月が同じか判定  
+            if [ "$REL_YEAR" = "$YEAR" ] && [ "$REL_MONTH" = "$MONTH" ]; then  
+              NEW_PATCH=$((REL_PATCH + 1))  
+              NEW_TAG="v${YEAR}.${MONTH}.${NEW_PATCH}"  
+              echo "Found a release for this month. Incrementing patch: $NEW_TAG"  
+            else  
+              NEW_TAG="v${YEAR}.${MONTH}.0"  
+              echo "No release for this month yet. Setting version: $NEW_TAG"  
+            fi  
+          fi  
 
-          echo ::set-output name=version::${VERSION}
-          echo "Version set to ${VERSION}"
+          echo "::set-output name=version::$NEW_TAG"  
+          echo "Version set to $NEW_TAG"  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION_PREFIX: "v"
           TZ: "Asia/Tokyo"
-      - uses: release-drafter/release-drafter@v5
-        with:
-          tag: ${{ steps.calver.outputs.version }}
-          name: ${{ steps.calver.outputs.version }}
-          version: ${{ steps.calver.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: release-drafter/release-drafter@v5  
+        with:  
+          tag: ${{ steps.calver.outputs.version }}  
+          name: ${{ steps.calver.outputs.version }}  
+          version: ${{ steps.calver.outputs.version }}  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}            
