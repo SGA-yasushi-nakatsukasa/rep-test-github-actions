@@ -55,6 +55,8 @@ jobs:
         run: |
           LATEST_RELEASE_VERSION=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName' || true)
           echo "latestReleaseVersion=$LATEST_RELEASE_VERSION" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 2) 最新のドラフトリリースバージョンを取得
       - name: Get the latest draft release version
@@ -63,6 +65,8 @@ jobs:
           # 直近10件分を取得し、isDraft==trueの先頭を取り出す
           LATEST_DRAFT_VERSION=$(gh release list --limit 10 --json tagName,isDraft --jq '.[] | select(.isDraft==true) | .tagName' | head -n 1 || true)
           echo "latestDraftVersion=$LATEST_DRAFT_VERSION" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # package.json の optionalDependencies と version を置き換え
       - name: Update package.json with new release versions
