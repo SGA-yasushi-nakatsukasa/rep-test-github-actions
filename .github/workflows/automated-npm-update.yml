@@ -40,6 +40,9 @@ jobs:
       - name: test version1
         run: npm version
 
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
+
       - name: test version2
         run: npm --version
 
