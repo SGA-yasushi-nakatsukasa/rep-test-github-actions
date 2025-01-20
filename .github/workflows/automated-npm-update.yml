@@ -53,7 +53,8 @@ jobs:
       - name: Get the latest published release version
         id: get-latest-release
         run: |
-          LATEST_RELEASE_VERSION=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName' || true)
+          LATEST_RELEASE_VERSION_RAW=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName' || true)
+          LATEST_RELEASE_VERSION=${LATEST_RELEASE_VERSION_RAW#v}
           echo "latestReleaseVersion=$LATEST_RELEASE_VERSION" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,7 +64,8 @@ jobs:
         id: get-draft-release
         run: |
           # 直近10件分を取得し、isDraft==trueの先頭を取り出す
-          LATEST_DRAFT_VERSION=$(gh release list --limit 10 --json tagName,isDraft --jq '.[] | select(.isDraft==true) | .tagName' | head -n 1 || true)
+          LATEST_DRAFT_VERSION_RAW=$(gh release list --limit 10 --json tagName,isDraft --jq '.[] | select(.isDraft==true) | .tagName' | head -n 1 || true)
+          LATEST_DRAFT_VERSION=${LATEST_DRAFT_VERSION_RAW#v}
           echo "latestDraftVersion=$LATEST_DRAFT_VERSION" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -85,10 +87,10 @@ jobs:
           fi
 
           # jq で package.json を書き換え
-          # 1) optionalDependencies["@shm-nsd/shm-lib-mv"] を ^(LATEST_RELEASE) に置き換え
+          # 1) optionalDependencies["aws-cdk-lib"] を ^(LATEST_RELEASE) に置き換え
           # 2) version を LATEST_DRAFT に置き換え
           jq --arg mvversion "^$LATEST_RELEASE" --arg draftVersion "$LATEST_DRAFT" \
-            '.optionalDependencies["@shm-nsd/shm-lib-mv"] = $mvversion | .version = $draftVersion' \
+            '.optionalDependencies["aws-cdk-lib"] = $mvversion | .version = $draftVersion' \
             package.json > package.json.tmp
 
           mv package.json.tmp package.json
@@ -107,7 +109,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          add-paths: package-lock.json
+          add-paths: |
+            package.json
+            package-lock.json
           commit-message: Update npm dependencies
           title: ${{ env.pr_title }}
           body: 'Automated changes by GitHub Actions'
