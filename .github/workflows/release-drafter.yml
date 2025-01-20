@@ -15,43 +15,45 @@ jobs:
           # 現在の年月を取得
           YEAR=$(date "+%Y")
           MONTH=$(date "+%m")
+          MONTH=$((10#$MONTH)) # 先頭の0を削除
 
-          # GitHub CLI で最新リリースタグを取得 (エラー時は何もせず継続)  
-          LATEST_RELEASE_TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || true)  
+          # GitHub CLI で最新リリースタグを取得 (エラー時は何もせず継続)
+          LATEST_RELEASE_TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || true)
 
-          if [ -z "$LATEST_RELEASE_TAG" ]; then  
-            echo "No existing release found. Setting version to v${YEAR}.${MONTH}.0"  
-            NEW_TAG="v${YEAR}.${MONTH}.0"  
-          else  
-            echo "Latest release tag: $LATEST_RELEASE_TAG"  
-            # 例: v2024.12.3 → 2024.12.3 を取り出して分割  
-            RAW="${LATEST_RELEASE_TAG#v}"  # 先頭の v を除去  
-            IFS='.' read -r REL_YEAR REL_MONTH REL_PATCH <<< "$RAW"  
+          if [ -z "$LATEST_RELEASE_TAG" ]; then
+            echo "No existing release found. Setting version to v${YEAR}.${MONTH}.0"
+            NEW_TAG="v${YEAR}.${MONTH}.0"
+          else
+            echo "Latest release tag: $LATEST_RELEASE_TAG"
+            # 例: v2024.12.3 → 2024.12.3 を取り出して分割
+            RAW="${LATEST_RELEASE_TAG#v}"  # 先頭の v を除去
+            IFS='.' read -r REL_YEAR REL_MONTH REL_PATCH <<< "$RAW"
 
-            # パッチ番号が存在しない場合は 0 扱い  
-            REL_PATCH="${REL_PATCH:-0}"  
+            # パッチ番号が存在しない場合は 0 扱い
+            REL_PATCH="${REL_PATCH:-0}"
 
-            # リリース年月と現在の年月が同じか判定  
-            if [ "$REL_YEAR" = "$YEAR" ] && [ "$REL_MONTH" = "$MONTH" ]; then  
-              NEW_PATCH=$((REL_PATCH + 1))  
-              NEW_TAG="v${YEAR}.${MONTH}.${NEW_PATCH}"  
-              echo "Found a release for this month. Incrementing patch: $NEW_TAG"  
-            else  
-              NEW_TAG="v${YEAR}.${MONTH}.0"  
-              echo "No release for this month yet. Setting version: $NEW_TAG"  
-            fi  
-          fi  
+            # リリース年月と現在の年月が同じか判定
+            if [ "$REL_YEAR" = "$YEAR" ] && [ "$REL_MONTH" = "$MONTH" ]; then
+              NEW_PATCH=$((REL_PATCH + 1))
+              NEW_TAG="v${YEAR}.${MONTH}.${NEW_PATCH}"
+              echo "Found a release for this month. Incrementing patch: $NEW_TAG"
+            else
+              # 月が異なる場合は 0 から始める
+              NEW_TAG="v${YEAR}.${MONTH}.0"
+              echo "No release for this month yet. Setting version: $NEW_TAG"
+            fi
+          fi
 
-          echo "::set-output name=version::$NEW_TAG"  
-          echo "Version set to $NEW_TAG"  
+          echo "::set-output name=version::$NEW_TAG"
+          echo "Version set to $NEW_TAG"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION_PREFIX: "v"
           TZ: "Asia/Tokyo"
-      - uses: release-drafter/release-drafter@v5  
-        with:  
-          tag: ${{ steps.calver.outputs.version }}  
-          name: ${{ steps.calver.outputs.version }}  
-          version: ${{ steps.calver.outputs.version }}  
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}            
+      - uses: release-drafter/release-drafter@v5
+        with:
+          tag: ${{ steps.calver.outputs.version }}
+          name: ${{ steps.calver.outputs.version }}
+          version: ${{ steps.calver.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
