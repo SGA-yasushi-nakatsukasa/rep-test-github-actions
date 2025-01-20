@@ -41,7 +41,7 @@ jobs:
         run: npm version
 
       - name: Upgrade npm to latest
-        run: npm install -g npm@latest
+        run: npm install -g npm@10.9.2
 
       - name: test version2
         run: npm --version
