@@ -23,7 +23,7 @@ jobs:
       pr_title: '[Automated] Update NPM dependencies'
 
     #runs-on: ubuntu-latest
-    runs-on: codebuild-github-hosted-runner-connect-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on: codebuild-nakatsu-shm-lib-mv-update-test-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Check out repository
