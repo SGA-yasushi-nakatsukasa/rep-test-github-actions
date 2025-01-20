@@ -5,9 +5,13 @@ name: Automated npm update
 #    - cron: '0 0 * * 1'
 #  workflow_dispatch:
 on:
-  push:
-    branches:
-      - main
+  #push:
+  #  branches:
+  #    - main
+  workflow_run:
+    workflows: ["Release Drafter"] # トリガーとするワークフロー名
+    types:
+    - completed
 
 permissions:
   contents: write
