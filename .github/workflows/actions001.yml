@@ -4,6 +4,7 @@ on:
   push:  
     branches:  
       - main  # トリガーしたいブランチを指定  
+      - branch01
   
 jobs:  
   codebuild:  

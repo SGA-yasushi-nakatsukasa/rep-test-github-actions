@@ -18,7 +18,7 @@ jobs:
           MONTH=$((10#$MONTH)) # 先頭の0を削除
 
           # GitHub CLI で最新リリースタグを取得 (エラー時は何もせず継続)
-          LATEST_RELEASE_TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || true)
+          LATEST_RELEASE_TAG=$(gh release --repo ${{github.repository}} view --json tagName --jq .tagName 2>/dev/null || true)
 
           if [ -z "$LATEST_RELEASE_TAG" ]; then
             echo "No existing release found. Setting version to v${YEAR}.${MONTH}.0"
