@@ -1,3 +1,3 @@
 # rep-test-github-actions
-test
 
+Github Actionsテスト用のリポジトリ
