@@ -21,7 +21,7 @@ jobs:
       - name: Configure AWS credentials  
         uses: aws-actions/configure-aws-credentials@v1  
         with:  
-          role-to-assume: arn:aws:iam::389738201279:role/nakatsu-github-actions-test01  
+          role-to-assume: arn:aws:iam::999999999999:role/nakatsu-github-actions-test01  
           aws-region: ap-northeast-1  # 適切なリージョンに変更  
   
       - name: Start CodeBuild project  
