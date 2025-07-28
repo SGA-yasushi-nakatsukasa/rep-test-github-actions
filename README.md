@@ -50,3 +50,4 @@ mainブランチへのコミットがあるとまず `.githu/workflows/release-d
 ここではpackage.json更新後、npm install / npm updateを実行し（package-lock.jsonが更新される）、それらの更新を含めたPull Requestを自動作成するところまで実施している。
 
 以上
+
